@@ -14,6 +14,7 @@ architecture behavior of monociclo is
 	signal PC : std_logic_vector (7 downto 0); --sinal para o PC
 	signal mux_branch, mux_jump : std_logic_vector (7 downto 0); --sinais para os muxes de saltos para o PC
 
+	--CAMPOS QUE VAO NA MEMORIA, OPCODE, REGISTRADORES, IMEDIATO
 	type memoria is array (integer range 0 to 255) of std_logic_vector (19 downto 0); --definicao da memoria
 	signal memoria_instrucoes : memoria; --memoria de instrucoes
 	signal memoria_instrucoes_out : std_logic_vector (19 downto 0); --saida da memoria de instrucoes
