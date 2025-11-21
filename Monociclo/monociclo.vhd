@@ -65,15 +65,17 @@ reg_rd <= memoria_instrucoes_out(7 downto 4) when opcode = "0001" or opcode = "0
 
 
 
-
-
 -- OPERAÇOES DA ULA
 soma <= reg_rs + reg_rt;
 sub  <= reg_rs - reg_rt;
 mult <= reg_rs * reg_rt;		
 equal <= '1' when reg_rs = reg_rt else '0'; 
 
-
+-- dois primeiros bits do opcode define a operaçao e os outros dois restantes o tipo de instruçao ? ? 
+-- OPCODES DA ULA
+saida_ula <= 	soma when opcode(1 downto 0) = "01" else
+		sub  when opcode(1 downto 0) = "10" else
+		mult when opcode(1 downto 0);
 
 
 	process(reset, clock)
@@ -85,7 +87,16 @@ equal <= '1' when reg_rs = reg_rt else '0';
 			reg_rd <= (others=>'0');
 			
 		elsif(clock = '1' and clock'event) then
-			PC <= PC + 1;
+			
+			case opcode is
+
+				when "0001"
+				reg_
+				
+
+
+
+
 		end if;
 	end process;
 
