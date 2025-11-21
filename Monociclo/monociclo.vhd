@@ -22,8 +22,8 @@ architecture behavior of monociclo is
 	
 	-- CAMPOS DA INSTRUÇAO (OPCODE, REGISTRADORES, VALOR IMD)
 	signal opcode 				: std_logic_vector(3 downto 0);
-	signal reg_rs  				: (3 downto); --registradores que vao fazer os calculos na ULA
-	signal reg_rt 				: (3 downto 0);
+	signal reg_rs  				: std_logic_vector (3 downto 0); --registradores que vao fazer os calculos na ULA
+	signal reg_rt 				: std_logic_vector (3 downto 0);
 	signal reg_rd 				: std_logic_vector (3 downto 0);
 	signal imediato				: std_logic_vector (7 downto 0);
 
@@ -35,7 +35,7 @@ architecture behavior of monociclo is
 	-- BANCO DE REGISTRADORES DO MIPS 
 	type registradores is array (0 to 15) of std_logic_vector(15 downto 0); -- 16 registradores com 16 bits de tamanho
 	signal banco_reg : registradores;
-	
+	banco_reg(0) <= (others => '0'); -- Constante 0 no registrador 0
 	
 	--SINAIAS PARA ULA
 	signal saida_ula : std_logic_vector(3 downto 0);
@@ -43,7 +43,10 @@ architecture behavior of monociclo is
 	signal sub	 : std_logic_vector (3 downto 0);
 	signal mult      : std_logic_vector (7 downto 0);
 	signal equal	 : std_logic;
-
+	
+	-- VALOR CARREGADO DOS REGISTRADORES
+	signal valor_rs	 : std_logic_vector(15 downto 0);
+	signal valor_rt  : std_logic_vector(15 downto 0);
 
 
 begin
@@ -59,19 +62,29 @@ reg_rt <= memoria_instrucoes_out(11 downto 8) when opcode = "0001" or opcode = "
 reg_rd <= memoria_instrucoes_out(7 downto 4) when opcode = "0001" or opcode = "0010" or opcode = "0011" else
 	(others => '0');
 
+-- LER OS VALORES DOS REGS
+valor_rs <= banco_reg(to_integer(unsigned(reg_rs))); -- valor_rs recebe o valor que esta no registrador rs indicado pela instrucao. Ex: se reg_rs for 0010 entao valor_rs recebe o valor que esta no registrador 2.
+valor_rt <= banco_reg(to_integer(unsigned(reg_rt)));
+
+
+
 -- TIPO I
 
 
 
 
 
+
+
+
 -- OPERAÇOES DA ULA
-soma <= reg_rs + reg_rt;
-sub  <= reg_rs - reg_rt;
-mult <= reg_rs * reg_rt;		
+soma <= valor_rs + valor_rt;
+sub  <= valor_rs - valor_rt;
+mult <= valor_rs * valor_rt;		
 equal <= '1' when reg_rs = reg_rt else '0'; 
 
--- dois primeiros bits do opcode define a operaçao e os outros dois restantes o tipo de instruçao ? ? 
+ 
+
 -- OPCODES DA ULA
 saida_ula <= 	soma when opcode(1 downto 0) = "01" else
 		sub  when opcode(1 downto 0) = "10" else
@@ -90,11 +103,27 @@ saida_ula <= 	soma when opcode(1 downto 0) = "01" else
 			
 			case opcode is
 
-				when "0001"
-				reg_
+				---------- TIPO R -------------
+
+			  when "0001" => -- ADD
+		
+			   	if(reg_rd /= "0000") then
+				  banco_reg(to_integer(unsigned(reg_rd))) <= saida_ula; -- opcode define a saida da ULA
+				end if;
+
+			  when "0010" =>  -- SUB
+			  
+				if(reg_rd /= "000") then
+				  banco_reg(to_integer(unsigned(reg_rd))) <= saida_ula
+				end if;
+
+			 when "0011" => --MULT
 				
+			     if(reg_rd /= "000") then
+			        banco_reg(to_integer(unsigned(reg_rd))) <= saida_ula
+			     end if;
 
-
+		         	---------- TIPO R -------------
 
 
 		end if;
