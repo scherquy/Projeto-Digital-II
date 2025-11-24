@@ -83,7 +83,7 @@ equal <= '1' when reg_rs = reg_rt else '0';
 -- OPCODES DA ULA
 saida_ula <= 	soma when opcode(1 downto 0) = "01" else
 		sub  when opcode(1 downto 0) = "10" else
-		mult when opcode(1 downto 0);
+		mult (7 downto 0);
 
 
 	process(reset, clock)
@@ -132,18 +132,18 @@ saida_ula <= 	soma when opcode(1 downto 0) = "01" else
 		       when "0101" => -- ADDI rt <- imd + rs
 		
 				if(reg_rt /= "0000") then
-				banco_reg(to_integer(unsigned(reg_rt))) <= reg_rs + imediato;
+				banco_reg(to_integer(unsigned(reg_rt))) <= valor_rs + imediato;
 		      
 		       when "0110" => -- SUBI rt <- imd - rs
 				
 				if(reg_rt /= "0000") then
-				banco_reg(to_integer(unsiged(reg_rt))) <= reg_rs - imediato;
+				banco_reg(to_integer(unsigned(reg_rt))) <= valor_rs - imediato;
 
 		     
 		       when "0111" => -- MULI rt <- imd * rs
 
 				if(reg_rt /= "0000") then
-				banco_reg(to_integer(unsigend(reg_rt))) <= reg_rs * imediato;
+				banco_reg(to_integer(unsigned(reg_rt))) <= valor_rs * imediato;
 
 			when "1000" => -- LW
 			
