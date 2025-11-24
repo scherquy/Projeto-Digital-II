@@ -38,10 +38,10 @@ architecture behavior of monociclo is
 	banco_reg(0) <= (others => '0'); -- Constante 0 no registrador 0
 	
 	--SINAIAS PARA ULA
-	signal saida_ula : std_logic_vector(3 downto 0);
-	signal soma	 : std_logic_vector (3 downto 0);
-	signal sub	 : std_logic_vector (3 downto 0);
-	signal mult      : std_logic_vector (7 downto 0);
+	signal saida_ula : std_logic_vector(15 downto 0);
+	signal soma	 : std_logic_vector (15 downto 0);
+	signal sub	 : std_logic_vector (15 downto 0);
+	signal mult      : std_logic_vector (31 downto 0);
 	signal equal	 : std_logic;
 	
 	-- VALOR CARREGADO DOS REGISTRADORES
@@ -66,10 +66,6 @@ imediato <= memoria_instrucoes_out(7 downto 0);
 -- LER OS VALORES DOS REGS
 valor_rs <= banco_reg(to_integer(unsigned(reg_rs))); -- valor_rs recebe o valor que esta no registrador rs indicado pela instrucao. Ex: se reg_rs for 0010 entao valor_rs recebe o valor que esta no registrador 2.
 valor_rt <= banco_reg(to_integer(unsigned(reg_rt)));
-
-
-
-
 
 
 
