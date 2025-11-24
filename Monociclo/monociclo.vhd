@@ -22,7 +22,7 @@ architecture behavior of monociclo is
 	
 	-- CAMPOS DA INSTRUÇAO (OPCODE, REGISTRADORES, VALOR IMD)
 	signal opcode 				: std_logic_vector(3 downto 0);
-	signal reg_rs  				: std_logic_vector (3 downto 0); --registradores que vao fazer os calculos na ULA
+	signal reg_rs  				: std_logic_vector (3 downto 0); 
 	signal reg_rt 				: std_logic_vector (3 downto 0);
 	signal reg_rd 				: std_logic_vector (3 downto 0);
 	signal imediato				: std_logic_vector (7 downto 0);
@@ -54,21 +54,20 @@ begin
 memoria_instrucoes_out <= memoria_instrucoes(conv_integer(PC));
 opcode <= memoria_instrucoes_out(19 downto 16);
 
--- TIPO R
-reg_rs <= memoria_instrucoes_out(15 downto 12) when opcode = "0001" or opcode = "0010" or opcode = "0011" else
-	(others => '0');
-reg_rt <= memoria_instrucoes_out(11 downto 8) when opcode = "0001" or opcode = "0010" or opcode = "0011" else
-	(others => '0');
-reg_rd <= memoria_instrucoes_out(7 downto 4) when opcode = "0001" or opcode = "0010" or opcode = "0011" else
-	(others => '0');
+
+-- CAMPOS DAS INSTRUÇOES
+opcode <= memoria_instrucoes_out(19 downto 16);
+reg_rs <= memoria_instrucoes_out(15 downto 12);
+reg_rt <= memoria_instrucoes_out(11 downto 8);
+reg_rd <= memoria_instrucoes_out(7 downto 4);
+imediato <= memoria_instrucoes_out(7 downto 0);
+
 
 -- LER OS VALORES DOS REGS
 valor_rs <= banco_reg(to_integer(unsigned(reg_rs))); -- valor_rs recebe o valor que esta no registrador rs indicado pela instrucao. Ex: se reg_rs for 0010 entao valor_rs recebe o valor que esta no registrador 2.
 valor_rt <= banco_reg(to_integer(unsigned(reg_rt)));
 
 
-
--- TIPO I
 
 
 
@@ -103,27 +102,78 @@ saida_ula <= 	soma when opcode(1 downto 0) = "01" else
 			
 			case opcode is
 
+
+
 				---------- TIPO R -------------
 
-			  when "0001" => -- ADD
+			  when "0001" => -- ADD rd <- rs + rt
 		
 			   	if(reg_rd /= "0000") then
 				  banco_reg(to_integer(unsigned(reg_rd))) <= saida_ula; -- opcode define a saida da ULA
 				end if;
 
-			  when "0010" =>  -- SUB
+			  when "0010" =>  -- SUB rd <- rs - rt
 			  
-				if(reg_rd /= "000") then
+				if(reg_rd /= "0000") then
 				  banco_reg(to_integer(unsigned(reg_rd))) <= saida_ula
 				end if;
 
-			 when "0011" => --MULT
+			 when "0011" => -- MULT rd <- rs * rt
 				
-			     if(reg_rd /= "000") then
+			     if(reg_rd /= "0000") then
 			        banco_reg(to_integer(unsigned(reg_rd))) <= saida_ula
 			     end if;
 
-		         	---------- TIPO R -------------
+
+
+				---------- TIPO I -------------
+				
+			when "0100" => --  LDI rt <- imd
+			
+				if(reg_rt /= "0000") then
+				banco_reg(to_integer(unsigned(reg_rt))) <= imediato;
+
+		       when "0101" => -- ADDI rt <- imd + rs
+		
+				if(reg_rt /= "0000") then
+				banco_reg(to_integer(unsigned(reg_rt))) <= reg_rs + imediato;
+		      
+		       when "0110" => -- SUBI rt <- imd - rs
+				
+				if(reg_rt /= "0000") then
+				banco_reg(to_integer(unsiged(reg_rt))) <= reg_rs - imediato;
+
+		     
+		       when "0111" => -- MULI rt <- imd * rs
+
+				if(reg_rt /= "0000") then
+				banco_reg(to_integer(unsigend(reg_rt))) <= reg_rs * imediato;
+
+			when "1000" => -- LW
+			
+			
+
+			when "1001" => -- SW
+
+
+			
+			     ---------- TIPO J -------------
+			
+
+			when "1010" -- JMP
+
+			
+
+			when "1011" -- BEQ
+
+
+
+
+			when "1100" -- BNE
+			
+
+			
+			 
 
 
 		end if;
