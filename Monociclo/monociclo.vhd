@@ -57,7 +57,7 @@ begin
     memoria_instrucoes_out <= memoria_instrucoes(conv_integer(PC));
 
     -- buscar dados da memoria
-    memoria_dados_out <= offset_ext + imediato;
+    memoria_dados_out <= valor_RS + offset_ext;
 
     -- decodifica campos
     opcode  <= memoria_instrucoes_out(19 downto 16);
