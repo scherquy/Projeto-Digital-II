@@ -20,7 +20,7 @@ architecture behavior of monociclo is
     signal memoria_instrucoes_out   : std_logic_vector (19 downto 0);
 
     -- CAMPOS DA INSTRUÇAO (OPCODE, REGISTRADORES, VALOR IMD)
-    signal opcode   : std_logic_vector(3 downto 0);
+    signal opcode    : std_logic_vector(3 downto 0);
     signal reg_rs    : std_logic_vector (3 downto 0);
     signal reg_rt    : std_logic_vector (3 downto 0);
     signal reg_rd    : std_logic_vector (3 downto 0);
@@ -29,7 +29,7 @@ architecture behavior of monociclo is
     -- MEMORIA DE DADOS (cada posição 16 bits)
     type memoria_dados_t is array (integer range 0 to 255) of std_logic_vector (15 downto 0);
     signal memoria_dados       : memoria_dados_t;
-    signal memoria_dados_out   : std_logic_vector (15 downto 0);
+    signal memoria_dados_out   : std_logic_vector (15 downto 0); -- valor
     signal endereco_mem        : std_logic_vector (15 downto 0);
 
     -- BANCO DE REGISTRADORES DO MIPS
@@ -51,13 +51,16 @@ architecture behavior of monociclo is
     -- EXTENSÃO DO IMEDIATO
     signal offset_ext : std_logic_vector(15 downto 0);
 
+
+    signal init_done : std_logic := '0'; --para teste
+
 begin
 
     -- buscar instrução
     memoria_instrucoes_out <= memoria_instrucoes(conv_integer(PC));
 
     -- buscar dados da memoria
-    memoria_dados_out <= valor_RS + offset_ext;
+    memoria_dados_out <= memoria_dados(conv_integer(endereco_mem(7 downto 0)));
 
     -- decodifica campos
     opcode  <= memoria_instrucoes_out(19 downto 16);
@@ -97,7 +100,6 @@ begin
             banco_reg <= (others => (others => '0')); -- limpa todos no reset
         elsif clock'event and clock = '1' then
            
-            PC <= PC + 1;
 
             -- garante r0 = 0 (sempre)
             banco_reg(0) <= (others => '0');
@@ -109,37 +111,44 @@ begin
                     if reg_rd /= "0000" then
                         banco_reg(conv_integer(reg_rd)) <= saida_ula;
                     end if;
+		PC <= PC + 1;
 
                 when "0010" => -- SUB rd <- rs - rt
                     if reg_rd /= "0000" then
                         banco_reg(conv_integer(reg_rd)) <= saida_ula;
                     end if;
+		PC <= PC + 1;
 
                 when "0011" => -- MUL rd <- rs * rt
                     if reg_rd /= "0000" then
                         banco_reg(conv_integer(reg_rd)) <= saida_ula;
                     end if;
+		PC <= PC + 1;
 
                 ---------- TIPO I -------------
                 when "0100" => -- LDI rt <- imediato 
                     if reg_rt /= "0000" then
                         banco_reg(conv_integer(reg_rt)) <= offset_ext;
                     end if;
+		PC <= PC + 1;
 
                 when "0101" => -- ADDI rt <- rs + imd 
                     if reg_rt /= "0000" then
                         banco_reg(conv_integer(reg_rt)) <= valor_rs + offset_ext;
                     end if;
+		PC <= PC + 1;
 
                 when "0110" => -- SUBI rt <- rs - imd
                     if reg_rt /= "0000" then
                         banco_reg(conv_integer(reg_rt)) <= valor_rs - offset_ext;
                     end if;
+		PC <= PC + 1;
 
                 when "0111" => -- MULI rt <- rs * imd
                     if reg_rt /= "0000" then
                         banco_reg(conv_integer(reg_rt)) <= saida_ula;
                     end if;
+		PC <= PC + 1;
 
                 when "1000" => -- LW rt <- Mem[rs + imd]
                     if reg_rt /= "0000" then
@@ -147,11 +156,13 @@ begin
 			banco_reg(conv_integer(reg_rt)) <= memoria_dados_out;                  
 		    
                     end if;
+		PC <= PC + 1;
 
                 when "1001" => -- SW Mem[rs + imd] <- rt
 		
-		memoria_dados(conv_integer(endereco_mem)) <= valor_rt;
-                    
+		memoria_dados(conv_integer(endereco_mem(7 downto 0))) <= valor_rt; -- limitar da posicao 0 a 255
+                
+		PC <= PC + 1;    
 
                 ---------- TIPO J -------------
                 when "1010" => -- JMP PC <- IMD
@@ -160,18 +171,37 @@ begin
                 when "1011" => -- BEQ (PC <- PC + imd)
                     if equal = '1' then
                         PC <= PC + imediato;
+		    else -- para nao sobrescrever o salto
+		    PC <= PC + 1;
+
                     end if;
 
                 when "1100" => -- BNE
                     if equal = '0' then
                         PC <= PC + imediato;
+		    else
+		     PC <= PC + 1;
 		     end if;
 
                 when others =>
-                    null;
+                PC <= PC + 1;
             end case; 
         end if;
     end process;
+
+  process(clock)
+    begin
+        if rising_edge(clock) and init_done = '0' then
+
+            memoria_instrucoes(0) <= "01000001000000000011"; -- LDI R1, 3 -- 0100
+            memoria_instrucoes(1) <= "01000010000000000101"; -- LDI R2, 5
+            memoria_instrucoes(2) <= "00010011000100100000"; -- ADD R3, R1, R2
+            memoria_instrucoes(3) <= "10010001000000000000"; -- SW R1, 0
+
+            init_done <= '1';
+        end if;
+    end process;
+
 
 end architecture;
 
