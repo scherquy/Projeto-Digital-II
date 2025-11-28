@@ -3,6 +3,9 @@ use IEEE.std_logic_1164.all;
 use IEEE.std_logic_arith.all;
 use IEEE.std_logic_unsigned.all;
 
+-- NAO ESTA LENDO A MEMORIA DE INSTRUCAO NA POSICAO 0!
+
+
 entity monociclo is
 port(
     reset, clock : in std_logic --pinos do reset e do clock para o PC
@@ -244,22 +247,22 @@ end process;
 begin
     if rising_edge(clock) and init_done = '0' then
         -- Formato R: OPCODE(4) | RD(4) | RS(4) | RT(4) | 0000
-        memoria_instrucoes(0) <= "01000010000000001010"; -- LDI rt(2) <- 10
-        memoria_instrucoes(1) <= "01000010000001010000"; -- LDI R2, 5
-        memoria_instrucoes(2) <= "00010011000100100000"; -- ADD R3, R1, R2
+        memoria_instrucoes(1) <= "01000010000000001010"; -- LDI rt(2) <- 10
+        memoria_instrucoes(2) <= "01000010000001010000"; -- LDI R2, 5
+        memoria_instrucoes(3) <= "00010011000100100000"; -- ADD R3, R1, R2
         
         -- Formato I: OPCODE(4) | RT(4) | RS(4) | IMD(8)
-        memoria_instrucoes(3) <= "10010001000000000000"; -- SW R1, 0 (R1 no endereço 0)
-        memoria_instrucoes(4) <= "10000011000000000000"; -- LW R3, 0 (carrega do endereço 0 para R3)
+        memoria_instrucoes(4) <= "10010001000000000000"; -- SW R1, 0 (R1 no endereço 0)
+        memoria_instrucoes(5) <= "10000011000000000000"; -- LW R3, 0 (carrega do endereço 0 para R3)
         
         -- Formato I: ADDI
-        memoria_instrucoes(5) <= "01010100000100100010"; -- ADDI R4, R1, 2 (R4 = R1 + 2)
+        memoria_instrucoes(6) <= "01010100000100100010"; -- ADDI R4, R1, 2 (R4 = R1 + 2)
         
         -- Formato B: OPCODE(4) | RS(4) | RT(4) | DESLOC(8)
-        memoria_instrucoes(6) <= "10110001000100000010"; -- BEQ R1, R1, 2 (salta offset_ext_signed(7 downto 0);  2 se R1 = R1)
+        memoria_instrucoes(7) <= "10110001000100000010"; -- BEQ R1, R1, 2 (salta offset_ext_signed(7 downto 0);  2 se R1 = R1)
         
         -- Formato J: OPCODE(4) | ENDERECO(8) | 00000000
-        memoria_instrucoes(9) <= "10100000000010010000"; -- JMP 9 (loop)
+        memoria_instrucoes(8) <= "10100000000010010000"; -- JMP 9 (loop)
 
         init_done <= '1';
     end if;
