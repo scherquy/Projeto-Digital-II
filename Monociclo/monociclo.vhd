@@ -66,7 +66,8 @@ architecture behavior of monociclo is
 begin
 
     -- buscar instrução
-    memoria_instrucoes_out <= memoria_instrucoes(conv_integer(PC));
+    memoria_instrucoes_out <= memoria_instrucoes(conv_integer(PC)) when reset = '0' else
+    (others => '0');
 
     -- buscar dados da memoria
     memoria_dados_out <= memoria_dados(conv_integer(endereco_mem(7 downto 0)));
@@ -150,6 +151,13 @@ end process;
             PC <= (others => '0');
             banco_reg <= (others => (others => '0')); -- limpa todos no reset
             memoria_dados <= (others => (others => '0'));  -- limpa memória de dados
+	    
+	memoria_instrucoes(0) <= "01000010000000001010"; -- LDI R2, 10
+        memoria_instrucoes(1) <= "01000011000000000101"; -- LDI R3, 5
+        memoria_instrucoes(2) <= "00010100001000110000"; -- ADD R4, R2, R3
+        memoria_instrucoes(3) <= "10100000000000000000"; -- JMP 0	    
+
+
 
 	elsif clock'event and clock = '1' then
            
@@ -216,8 +224,8 @@ end process;
 		
 		memoria_dados(conv_integer(endereco_mem(7 downto 0))) <= valor_rt; -- limitar da posicao 0 a 255
                 
-		PC <= PC + 1;    
-
+		PC <= PC + 1;
+	
                 ---------- TIPO J -------------
                 when "1010" => -- JMP PC <- IMD
                     PC <= endereco_jump;   -- imediato tem 8 bits; PC tem 8 bits
@@ -237,8 +245,7 @@ end process;
 		     PC <= PC + 1;
 		     end if;
 
-                when others =>
-                PC <= PC + 1;
+                when others => PC <= PC + 1;
             end case; 
         end if;
     end process;
@@ -246,25 +253,7 @@ end process;
  process(clock)
 begin
     if rising_edge(clock) and init_done = '0' then
-        -- Formato R: OPCODE(4) | RD(4) | RS(4) | RT(4) | 0000
-        memoria_instrucoes(1) <= "01000010000000001010"; -- LDI rt(2) <- 10
-        memoria_instrucoes(2) <= "01000010000001010000"; -- LDI R2, 5
-        memoria_instrucoes(3) <= "00010011000100100000"; -- ADD R3, R1, R2
-        
-        -- Formato I: OPCODE(4) | RT(4) | RS(4) | IMD(8)
-        memoria_instrucoes(4) <= "10010001000000000000"; -- SW R1, 0 (R1 no endereço 0)
-        memoria_instrucoes(5) <= "10000011000000000000"; -- LW R3, 0 (carrega do endereço 0 para R3)
-        
-        -- Formato I: ADDI
-        memoria_instrucoes(6) <= "01010100000100100010"; -- ADDI R4, R1, 2 (R4 = R1 + 2)
-        
-        -- Formato B: OPCODE(4) | RS(4) | RT(4) | DESLOC(8)
-        memoria_instrucoes(7) <= "10110001000100000010"; -- BEQ R1, R1, 2 (salta offset_ext_signed(7 downto 0);  2 se R1 = R1)
-        
-        -- Formato J: OPCODE(4) | ENDERECO(8) | 00000000
-        memoria_instrucoes(8) <= "10100000000010010000"; -- JMP 9 (loop)
-
-        init_done <= '1';
+                init_done <= '1';
     end if;
 end process;
 
