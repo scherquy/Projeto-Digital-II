@@ -3,7 +3,6 @@ use IEEE.std_logic_1164.all;
 use IEEE.std_logic_arith.all;
 use IEEE.std_logic_unsigned.all;
 
--- NAO ESTA LENDO A MEMORIA DE INSTRUCAO NA POSICAO 0!
 
 
 entity monociclo is
@@ -151,11 +150,16 @@ end process;
             PC <= (others => '0');
             banco_reg <= (others => (others => '0')); -- limpa todos no reset
             memoria_dados <= (others => (others => '0'));  -- limpa memória de dados
-	    
-	memoria_instrucoes(0) <= "01000010000000001010"; -- LDI R2, 10
-        memoria_instrucoes(1) <= "01000011000000000101"; -- LDI R3, 5
-        memoria_instrucoes(2) <= "00010100001000110000"; -- ADD R4, R2, R3
-        memoria_instrucoes(3) <= "10100000000000000000"; -- JMP 0	    
+	    memoria_instrucoes <= (others => (others => '0'));
+	               -- TIPO I: | OPCODE(4) | RT(4) | RS(4) | IMD(8)| rt <- imd    
+	memoria_instrucoes(0) <= "01000010000000001010"; -- LDI banco_reg(2) <- 10
+        memoria_instrucoes(1) <= "01000011000000001010"; -- LDI banco_reg(3) <- 10
+	memoria_instrucoes(2) <= "01001010000000000101"; -- LDI banco_reg(10)<- 5
+	memoria_instrucoes(3) <= "01001011000000000010"; -- LDI banco_reg(11)<- 2
+		       -- TIPO R: | OPCODE(4) | RD(4) | RS(4) | RT(4) | don't care(4)| rd <- rs + rt
+	memoria_instrucoes(4) <= "00010100001000110000"; -- ADD banco_reg(4) <-banco_reg(2) + banco_reg(3) |10 + 10| 
+        memoria_instrucoes(5) <= "00100101001010100000"; -- SUB banco_reg(5) <- banco_reg(2) - banco_reg(10) | 10 - 5|
+        memoria_instrucoes(6) <= "00110110101110100000"; -- MUL banco_reg(6) <- banco_reg(11) * banco_reg(10) | 2 * 5|     
 
 
 
