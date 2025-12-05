@@ -151,6 +151,10 @@ end process;
             banco_reg <= (others => (others => '0')); -- limpa todos no reset
             memoria_dados <= (others => (others => '0'));  -- limpa memória de dados
 	    memoria_instrucoes <= (others => (others => '0'));
+
+	    		-------------------***/ INSTRUÇOES \***-------------------
+
+
 	              -- TIPO I: | OPCODE(4) | RT(4) | RS(4) | IMD(8)| banco_reg(rt) <- imd    
 	memoria_instrucoes(0) <= "01000010000000001010"; -- LDI banco_reg(2) <- 10
         memoria_instrucoes(1) <= "01000011000000001010"; -- LDI banco_reg(3) <- 10
@@ -167,9 +171,25 @@ end process;
  	memoria_instrucoes(8) <= "01101000001100001001"; -- SUBI banco_reg(8) <- banco_reg(3) - 9 | 10 - 9 |
 	memoria_instrucoes(9) <= "01111001101100000100"; -- MULI banco_reg(9) <- banco_reg(11) * 5 | 2 * 5| -- ANALISAR DEPOIS
 			-- SW Mem[rs + imd] <- rt
-	memoria_instrucoes(10) <= "10011000000000000100"; -- SW mem_dados(4) <- banco_reg(8) 
+	memoria_instrucoes(10) <= "10011000000000000100"; -- SW mem_dados(4) <- banco_reg(rt-8)|1| 
+	memoria_instrucoes(12) <= "10010010000000001010";  -- SW mem_dados(10) <- banco_reg(rt-2)|10|
 			-- LW rt <- Mem[rs + imd]
-	memoria_instrucoes(11) <= "10001100000000000100"; -- LW banco_reg(11) <- mem_dados(4)|1|
+	memoria_instrucoes(13) <= "10001100000000000100"; -- LW banco_reg(12) <- mem_dados(4)|1|
+	memoria_instrucoes(14) <= "10001101000000001010"; -- LW banco_reg(13) <- mem_dados(10)|10|
+			-- Formato J: JMP ( OPCODE(4) | ENDERECO(8) | 00000000)
+	memoria_instrucoes(15) <= "10100011001000000000"; -- PC <- END 50
+
+		        --Formato B:  (OPCODE(4) | RS(4) | RT(4) | DESLOC(8)
+	memoria_instrucoes(50) <= "10111101101000110010"; -- BEQ reg(12)|10| == reg(10)|5| pc<= 100
+	memoria_instrucoes(51) <= "00101101110111000000"; -- SUB reg(12) <- 10 - 1 
+	memoria_instrucoes(52) <= "10100011001000000000"; -- PC <- END 50
+	
+	
+
+
+
+			-------------------***/ INSTRUÇOES \***-------------------
+
 
 	elsif
 
@@ -246,7 +266,7 @@ end process;
 
                 when "1011" => -- BEQ (PC <- PC + imd)
                     if equal = '1' then
-                        PC <= PC + offset_ext_signed(7 downto 0);  
+                        PC <= PC + deslocamento;  
 		    else -- para nao sobrescrever o salto
 		    PC <= PC + 1;
 
@@ -254,7 +274,7 @@ end process;
 
                 when "1100" => -- BNE
                     if equal = '0' then
-                        PC <= PC + offset_ext_signed(7 downto 0);  
+                        PC <= PC + deslocamento;  
 		    else
 		     PC <= PC + 1;
 		     end if;
