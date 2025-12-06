@@ -16,20 +16,19 @@ architecture behavior of pipeline is
 
       -- PC e MUXES para o PC
      signal PC : std_logic_vector (7 downto 0); --sinal para o PC
+     signal pc_next : std_logic_vector(7 downto 0);
+     signal pc_branch_end : std_logic_vector(7 downto 0);
+     signal branch_taken : std_logic; -- sinal para indicar se o branch e tomado ou nao
 
-    -- MEMORIA DE INSTRUÇAO
+
+     signal decode_opcode : std_logic_vector(3 downto 0);
+
+     -- MEMORIA DE INSTRUÇAO
      type memoria_inst_t is array (integer range 0 to 255) of std_logic_vector (19 downto 0);
      signal memoria_instrucoes       : memoria_inst_t;
      signal memoria_instrucoes_out   : std_logic_vector (19 downto 0);
 
-    -- CAMPOS DA INSTRUÇAO (OPCODE, REGISTRADORES, VALOR IMD)
-     signal opcode    : std_logic_vector(3 downto 0);
-     signal reg_rs    : std_logic_vector(3 downto 0);
-     signal reg_rt    : std_logic_vector(3 downto 0);
-     signal reg_rd    : std_logic_vector(3 downto 0);
-     signal imediato  : std_logic_vector(7 downto 0);
-     signal endereco_jump : std_logic_vector(7 downto 0);
-     signal deslocamento : std_logic_vector(7 downto 0);	
+
 
     -- MEMORIA DE DADOS (cada posição 16 bits)
     type memoria_dados_t is array (integer range 0 to 255) of std_logic_vector (15 downto 0);
@@ -41,22 +40,7 @@ architecture behavior of pipeline is
     type registradores is array (integer range 0 to 15) of std_logic_vector(15 downto 0); -- indices sendo representador por inteiros por isso a conversao
     signal banco_reg : registradores;
 
-    -- SINAIS PARA ULA
-    signal saida_ula : std_logic_vector (15 downto 0);
-    signal soma      : std_logic_vector (15 downto 0);
-    signal sub       : std_logic_vector (15 downto 0);
-    signal mult      : std_logic_vector (31 downto 0);
-    signal muli	     : std_logic_vector (31 downto 0);
-    signal equal     : std_logic;
-
-    -- VALOR CARREGADO DOS REGISTRADORES
-    signal valor_rs  : std_logic_vector(15 downto 0);
-    signal valor_rt  : std_logic_vector(15 downto 0);
-
-    -- EXTENSÃO DO IMEDIATO
-    signal offset_ext : std_logic_vector(15 downto 0);
-    signal offset_ext_signed : std_logic_vector(15 downto 0);
-    signal init_done : std_logic := '0'; --para teste
+  
 
 
      -- ESTÁGIO IF/ID
@@ -91,79 +75,15 @@ begin
 
     -- buscar dados da memoria
     memoria_dados_out <= memoria_dados(conv_integer(endereco_mem(7 downto 0)));
+  
+    -- logica para o PC	
+    pc_next <= pc_branch_end when branch_taken = '1' else
+               PC + 1;
 
-    --opcode da memoria de instrucao
-    opcode <= memoria_instrucoes_out(19 downto 16);	
+
 
   
--- Decodificar instrucao
-process(memoria_instrucoes_out, opcode)
-begin
-    -- resetar campos 
-    reg_rs <= (others => '0');
-    reg_rt <= (others => '0');
-    reg_rd <= (others => '0');
-    imediato <= (others => '0');
-    endereco_jump <= (others => '0');
-    deslocamento <= (others => '0');
-    
-    case opcode is
-        -- Formato R: ADD, SUB, MUL (20 bits: OPCODE(4) | RD(4) | RS(4) | RT(4) | 0000)
-        when "0001" | "0010" | "0011" =>  -- ADD, SUB, MUL
-            reg_rd <= memoria_instrucoes_out(15 downto 12);
-            reg_rs <= memoria_instrucoes_out(11 downto 8);
-            reg_rt <= memoria_instrucoes_out(7 downto 4);
-        
-        -- Formato I: LDI, ADDI, SUBI, MULI, LW, SW (20 bits: OPCODE(4) | RT(4) | RS(4) | IMD(8))
-        when "0100" | "0101" | "0110" | "0111" | "1000" | "1001" =>  -- LDI, ADDI, SUBI, MULI, LW, SW
-            reg_rt <= memoria_instrucoes_out(15 downto 12);
-            reg_rs <= memoria_instrucoes_out(11 downto 8);
-            imediato <= memoria_instrucoes_out(7 downto 0);
-        
-        -- Formato J: JMP (20 bits: OPCODE(4) | ENDERECO(8) | 00000000)
-        when "1010" =>  -- JMP
-            endereco_jump <= memoria_instrucoes_out(15 downto 8);
-        
-        -- Formato B: BEQ, BNE (20 bits: OPCODE(4) | RS(4) | RT(4) | DESLOC(8))
-        when "1011" | "1100" =>  -- BEQ, BNE
-            reg_rs <= memoria_instrucoes_out(15 downto 12);
-            reg_rt <= memoria_instrucoes_out(11 downto 8);
-            deslocamento <= memoria_instrucoes_out(7 downto 0);
-        
-        when others =>
-            null;
-    end case;
-end process;
 
-
-
-    -- extensão do imediato 
-    offset_ext <= "00000000" & imediato;
-    offset_ext_signed <= (15 downto 8 => imediato(7)) & imediato;
-
-
-
-    -- ler registradores  
-    valor_rs <= banco_reg(conv_integer(reg_rs));
-    valor_rt <= banco_reg(conv_integer(reg_rt));
-
-    -- ULA
-    soma <= valor_rs + valor_rt;
-    sub  <= valor_rs - valor_rt;
-    mult <= valor_rs * valor_rt;
-    muli <= valor_rs * offset_ext;
-    equal<= '1' when valor_rs = valor_rt else '0';
-
-    saida_ula <= soma when opcode = "0001" else
-                 sub  when opcode = "0010" else
-                 mult(15 downto 0) when opcode = "0011" else
-		 muli(15 downto 0) when opcode = "0111" else
-                 (others => '0');
-
-    -- calcular endereco_mem 
-    endereco_mem <= valor_rs + offset_ext;
-
-    --
     process(reset, clock)
     begin
         if reset = '1' then
@@ -225,8 +145,8 @@ end process;
 
 
 	    ------------- IF -> ID -------------
-	    IF_ID_PC <= PC;
-	    IF_ID_instruction <= memoria_instrucoes_out;
+	    IF_ID_PC <= PC; -- recebe PC
+	    IF_ID_instruction <= memoria_instrucoes_out;  --IF recebe memoria de instrucao
 
 
 
@@ -295,12 +215,7 @@ end process;
            end if;
     end process;
 
- process(clock)
-begin
-    if rising_edge(clock) and init_done = '0' then
-                init_done <= '1';
-    end if;
-end process;
+
 
 
 end architecture;
