@@ -63,6 +63,7 @@ architecture behavior of pipeline is
     signal MEM_WB_opcode : std_logic_vector(3 downto 0);
     signal MEM_WB_resultado_ula : std_logic_vector(15 downto 0);
     signal MEM_WB_dado_mem : std_logic_vector(15 downto 0);
+
     signal MEM_WB_reg_dest : std_logic_vector(3 downto 0);
 
    
@@ -91,9 +92,28 @@ begin
             banco_reg <= (others => (others => '0')); -- limpa todos no reset
             memoria_dados <= (others => (others => '0'));  -- limpa memória de dados
 	    memoria_instrucoes <= (others => (others => '0'));
+	    endereco_mem  <= (others => '0');
 	    IF_ID_PC <= (others => '0');
 	    IF_ID_instruction <= (others => '0');
 	    ID_EX_opcode <= (others => '0');
+	    ID_EX_reg_rs <=(others => '0');
+	    ID_EX_reg_rt <=(others => '0');
+	    ID_EX_reg_rd <=(others => '0');
+	    ID_EX_valor_rs <=(others => '0');
+	    ID_EX_valor_rt <=(others => '0');
+	    ID_EX_imediato <=(others => '0');
+	    EX_MEM_opcode <=(others => '0');
+	    EX_MEM_resultado_ula <= (others => '0');
+	    EX_MEM_valor_rt <= (others => '0');
+	    EX_MEM_reg_dest <= (others => '0');
+	    MEM_WB_opcode <= (others => '0');
+	    MEM_WB_resultado_ula <= (others => '0');
+	    MEM_WB_dado_mem <= (others => '0'); 
+	    MEM_WB_reg_dest <= (others => '0');
+	    decode_opcode <= (others => '0');
+	    branch_taken <=  '0';
+            pc_branch_end <= (others => '0');
+
 
 	    		-------------------***/ INSTRUÇOES \***-------------------
 
@@ -114,18 +134,18 @@ begin
  	memoria_instrucoes(8) <= "01101000001100001001"; -- SUBI banco_reg(8) <- banco_reg(3) - 9 | 10 - 9 |
 	memoria_instrucoes(9) <= "01111001101100000100"; -- MULI banco_reg(9) <- banco_reg(11) * 5 | 2 * 5| -- ANALISAR DEPOIS
 			-- SW Mem[rs + imd] <- rt
-	memoria_instrucoes(10) <= "10011000000000000100"; -- SW mem_dados(4) <- banco_reg(rt-8)|1| 
-	memoria_instrucoes(12) <= "10010010000000001010";  -- SW mem_dados(10) <- banco_reg(rt-2)|10|
+	--memoria_instrucoes(10) <= "10011000000000000100"; -- SW mem_dados(4) <- banco_reg(rt-8)|1| 
+	--memoria_instrucoes(12) <= "10010010000000001010";  -- SW mem_dados(10) <- banco_reg(rt-2)|10|
 			-- LW rt <- Mem[rs + imd]
-	memoria_instrucoes(13) <= "10001100000000000100"; -- LW banco_reg(12) <- mem_dados(4)|1|
-	memoria_instrucoes(14) <= "10001101000000001010"; -- LW banco_reg(13) <- mem_dados(10)|10|
+	--memoria_instrucoes(13) <= "10001100000000000100"; -- LW banco_reg(12) <- mem_dados(4)|1|
+	--memoria_instrucoes(14) <= "10001101000000001010"; -- LW banco_reg(13) <- mem_dados(10)|10|
 			-- Formato J: JMP ( OPCODE(4) | ENDERECO(8) | 00000000)
-	memoria_instrucoes(15) <= "10100011001000000000"; -- PC <- END 50
+	--memoria_instrucoes(15) <= "10100011001000000000"; -- PC <- END 50
 
 		        --Formato B:  (OPCODE(4) | RS(4) | RT(4) | DESLOC(8)
-	memoria_instrucoes(50) <= "10111101101000110010"; -- BEQ reg(12)|10| == reg(10)|5| pc<= 100
-	memoria_instrucoes(51) <= "00101101110111000000"; -- SUB reg(12) <- 10 - 1 
-	memoria_instrucoes(52) <= "10100011001000000000"; -- PC <- END 50
+	--memoria_instrucoes(50) <= "10111101101000110010"; -- BEQ reg(12)|10| == reg(10)|5| pc<= 100
+	--memoria_instrucoes(51) <= "00101101110111000000"; -- SUB reg(12) <- 10 - 1 
+	--memoria_instrucoes(52) <= "10100011001000000000"; -- PC <- END 50
 	
 	
 
@@ -154,14 +174,29 @@ begin
             -- ESTÁGIO ID (Instruction Decode)
             --------------------------------
 	    decode_opcode <= IF_ID_instruction(19 downto 16);
+	    ID_EX_opcode <= decode_opcode;
+	    ID_EX_imediato <= IF_ID_instruction(7 downto 0);
 	
 	    -- ID -> EX
-	    ID_EX_opcode <= decode_opcode;
-	    ID_EX_reg_rs <= IF_ID_instruction(15 downto 12);
-	    ID_EX_reg_rt <= IF_ID_instruction(11 downto 8);
-	    ID_EX_reg_rd <= IF_ID_instruction(7 downto 4);
-	    ID_EX_imediato <= IF_ID_instruction(7 downto 0);
-	    
+	   
+	
+	    -- Para TIPO R: registradores RD, RS, RT
+	if decode_opcode = "0001" or decode_opcode = "0010" or decode_opcode = "0011" then
+    		ID_EX_reg_rd <= IF_ID_instruction(15 downto 12);  -- RD
+  		ID_EX_reg_rs <= IF_ID_instruction(11 downto 8);   -- RS  
+                ID_EX_reg_rt <= IF_ID_instruction(7 downto 4);    -- RT
+
+	
+
+	-- Para TIPO I: registradores RT, RS
+	elsif decode_opcode = "0100" or decode_opcode = "0101" or decode_opcode = "0110" or decode_opcode = "0111" then
+    		ID_EX_reg_rt <= IF_ID_instruction(15 downto 12);  -- RT (destino)
+  	  	ID_EX_reg_rs <= IF_ID_instruction(11 downto 8);   -- RS (fonte)
+	end if;
+	
+
+
+
 	    ID_EX_valor_rs <= banco_reg(conv_integer(ID_EX_reg_rs));
 	    ID_EX_valor_rt <= banco_reg(conv_integer(ID_EX_reg_rt));
 
@@ -170,25 +205,72 @@ begin
             -- ESTÁGIO EX (Execute)
             --------------------------------
 		
+	    		   --/ TIPO R \--
 
-	     --ADD	
+	     -- ADD: rd <- rs + rt	
 	    if ID_EX_opcode = "0001" then
 	     EX_MEM_resultado_ula <= ID_EX_valor_rs + ID_EX_valor_rt;
 	    end if;
+	    -- SUB: rd <- rs - rt
+	    if ID_EX_opcode = "0010" then
+	      EX_MEM_resultado_ula <= ID_EX_valor_rs - ID_EX_valor_rt;
+	    end if;
 
+	    -- MUL: rd <- rs * rt
+	    if ID_EX_opcode = "0011" then
+		EX_MEM_resultado_ula <= ID_EX_valor_rs * ID_EX_valor_rt;
+	    end if;
+
+
+
+			    --/ TIPO I \--
+
+	    -- LDI: rt <- imediato
+	   if ID_EX_opcode = "0100" then  -- LDI
+              EX_MEM_resultado_ula <= "00000000" & ID_EX_imediato;
+    	      EX_MEM_reg_dest <= ID_EX_reg_rt;  -- LDI usa RT como destino!
+	end if;
+
+	   -- ADDI: rt <- rs + imd
+	   if ID_EX_opcode= "0101" then
+              EX_MEM_resultado_ula <= ID_EX_valor_rs + ("00000000" & ID_EX_imediato);
+	   end if;
+
+	    -- SUBI: rt <- rs - imd
+	   if ID_EX_opcode= "0110" then
+              EX_MEM_resultado_ula <= ID_EX_valor_rs - ("00000000" & ID_EX_imediato);
+	   end if;		      
+	   
+	   -- MULI: rt <- rs * imd
+	   if ID_EX_opcode= "0111" then
+              EX_MEM_resultado_ula <= ID_EX_valor_rs * ("00000000" & ID_EX_imediato);
+	   end if;	
+
+		
 
 	    -- EX -> MEM
 	    EX_MEM_opcode <= ID_EX_opcode;
-	    EX_MEM_reg_dest <= ID_EX_reg_rd;
-		
+	    
+
+
+
+      	    -- TIPO R onde o rd recebe o valor
+	     if ID_EX_opcode = "0001" or ID_EX_opcode = "0010" or ID_EX_opcode = "0011" then
+		EX_MEM_reg_dest <= ID_EX_reg_rd;
+	  
+
+	    -- TIPO I onde o rt recebe o valor
+	    elsif ID_EX_opcode = "0100" or ID_EX_opcode = "0101" or ID_EX_opcode = "0110" or ID_EX_opcode= "0111" then
+		  EX_MEM_reg_dest <= ID_EX_reg_rt;
+
+	    end if;
 
 	    --------------------------------
             -- ESTÁGIO MEM (Memory Access)
             --------------------------------
 
 	    if EX_MEM_opcode = "1000" then
-	    
-		MEM_WB_dado_mem <= memoria_dados(conv_integer(EX_MEM_resultado_ula(7 downto 0)));
+	       MEM_WB_dado_mem <= memoria_dados(conv_integer(EX_MEM_resultado_ula(7 downto 0)));
 	    end if;
 
 	
@@ -203,15 +285,65 @@ begin
 	    --------------------------------
             -- ESTÁGIO WB (Write Back)
             --------------------------------
+	    
+				    --/ TIPO R \--
+		
+	     -- ADD: rd <- rs + rt	
+	    if MEM_WB_opcode = "0001" then  
+	       if MEM_WB_reg_dest /= "0000" then
+	        banco_reg(conv_integer(MEM_WB_reg_dest)) <= MEM_WB_resultado_ula;
+	       end if;
+	    end if;
 
-	    if MEM_WB_opcode = "0001" then  -- ADD
+	    -- SUB: rd <- rs - rt
+	    if MEM_WB_opcode = "0010" then  
 	       if MEM_WB_reg_dest /= "0000" then
 	        banco_reg(conv_integer(MEM_WB_reg_dest)) <= MEM_WB_resultado_ula;
 	       end if;
 	    end if;
 	
+	    -- MUL: rd <- rs * rt
+	    if MEM_WB_opcode = "0011" then  
+	       if MEM_WB_reg_dest /= "0000" then
+	        banco_reg(conv_integer(MEM_WB_reg_dest)) <= MEM_WB_resultado_ula;
+	       end if;
+	    end if;
 
 
+				--/ TIPO I \--
+
+	     -- LDI: rt <- imediato
+	     if MEM_WB_opcode = "0100" then  
+	       if MEM_WB_reg_dest /= "0000" then
+	        banco_reg(conv_integer(MEM_WB_reg_dest)) <= MEM_WB_resultado_ula;
+	       end if;
+	    end if;
+
+	   -- ADDI: rt <- rs + imd
+	   if MEM_WB_opcode = "0101" then  
+	       if MEM_WB_reg_dest /= "0000" then
+	        banco_reg(conv_integer(MEM_WB_reg_dest)) <= MEM_WB_resultado_ula;
+	       end if;
+	    end if;
+
+	
+		
+	     -- SUBI: rt <- rs - imd
+	     if MEM_WB_opcode = "0110" then  
+	       if MEM_WB_reg_dest /= "0000" then
+	        banco_reg(conv_integer(MEM_WB_reg_dest)) <= MEM_WB_resultado_ula;
+	       end if;
+	    end if;
+
+
+	    -- MULI: rt <- rs * imd
+	    if MEM_WB_opcode = "0111" then  
+	       if MEM_WB_reg_dest /= "0000" then
+	        banco_reg(conv_integer(MEM_WB_reg_dest)) <= MEM_WB_resultado_ula;
+	       end if;
+	    end if;
+		
+	
            end if;
     end process;
 
