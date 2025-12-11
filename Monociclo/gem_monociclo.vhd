@@ -41,9 +41,9 @@ architecture behavior of monociclo is
 	-- Formato I: LDI, ADDI, SUBI, MULI, LW, SW (20 bits: OPCODE(4) | RT(4) | RS(4) | IMD(8)   RT <- DADO
         7 => "01010111101100000010", -- ADDI R7, R11, 2 ( 2 + 2)
         8 => "01101000001100001001", -- SUBI R8, R3, 9  ( 10 - 9 ) 
-        9 => "01111001101100000100", -- MULI R9, R11, 5 ( 2 * 5 )
+        9 => "01111001101100000101", -- MULI R9, R11, 5 ( 2 * 5 )
         10 => "10011000000000000100", -- SW R4 no End 1 (usando offset 1+0) (guarda 1)
-	--- FALTOU INSTRUÇAO NA POSIÇAO 11
+	--- FALTOU INSTRUï¿½AO NA POSIï¿½AO 11
         12 => "10010010000000001010", -- SW R10 no End 10 (guarda 10)
         13 => "10001100000000000100", -- LW R12 do End 1 (1)
         14 => "10001101000000001010", -- LW R13 do End 10 (10)
