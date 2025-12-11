@@ -1,0 +1,65 @@
+library ieee;                 
+use ieee.std_logic_1164.all;  
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.all;
+
+entity tb_monociclo is
+end entity;
+
+architecture behavior of tb_monociclo is
+
+    -- Declaração do Componente
+    component monociclo is
+       port(
+           reset : in std_logic;
+           clock : in std_logic
+       );
+    end component;
+
+    -- Sinais
+    signal clock_sg : std_logic := '0';
+    signal reset_sg : std_logic := '1';
+    
+    -- Constante para o período do clock (facilita alterar a velocidade)
+    constant CLK_PERIOD : time := 10 ns; 
+
+begin
+
+    -- Instanciação do Processador
+    inst_top: monociclo
+        port map(
+            reset => reset_sg,
+            clock => clock_sg
+        );
+
+    -- Processo do Clock (Gera um clock infinito com período de 10ns)
+    process
+    begin
+        clock_sg <= '0';
+        wait for CLK_PERIOD / 2;
+        clock_sg <= '1';
+        wait for CLK_PERIOD / 2;
+    end process;
+
+    -- Processo de Estímulo (Reset e Controle)
+    process
+    begin
+        -- 1. Começa com Reset ligado
+        reset_sg <= '1';
+        
+        -- 2. Segura o reset por 2 ciclos de clock (20ns) para garantir limpeza
+        wait for CLK_PERIOD * 2;
+        
+        -- 3. Solta o Reset (O processador começa a executar aqui)
+        reset_sg <= '0';
+        
+        -- 4. Deixa a simulação rodar por um tempo suficiente para seu programa
+        -- Se seu programa tem loops, dê tempo suficiente.
+        wait for 2000 ns; 
+        
+        -- 5. (Opcional) Para a simulação ou imprime mensagem
+        report "Fim da simulacao (tempo limite atingido)";
+        wait; -- Espera para sempre (para o process, o clock continua rodando se não for travado)
+    end process;
+
+end behavior;
