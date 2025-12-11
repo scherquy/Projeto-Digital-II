@@ -71,8 +71,7 @@ architecture behavior of pipeline is
 begin
 
     -- buscar instrução
-    memoria_instrucoes_out <= memoria_instrucoes(conv_integer(PC)) when reset = '0' else
-    (others => '0');
+    memoria_instrucoes_out <= memoria_instrucoes(conv_integer(PC));
 
     -- buscar dados da memoria
     memoria_dados_out <= memoria_dados(conv_integer(endereco_mem(7 downto 0)));
@@ -119,20 +118,26 @@ begin
 
 
 	              -- TIPO I: | OPCODE(4) | RT(4) | RS(4) | IMD(8)| banco_reg(rt) <- imd    
-	memoria_instrucoes(0) <= "01000010000000001010"; -- LDI banco_reg(2) <- 10
-        memoria_instrucoes(1) <= "01000011000000001010"; -- LDI banco_reg(3) <- 10
-	memoria_instrucoes(2) <= "01001010000000000101"; -- LDI banco_reg(10)<- 5
-	memoria_instrucoes(3) <= "01001011000000000010"; -- LDI banco_reg(11)<- 2
+	memoria_instrucoes(0) <= (others => '0'); -- NOP 1 (bolha de reset)
+	memoria_instrucoes(0) <= (others => '0'); -- NOP 1 (bolha de reset)
+	memoria_instrucoes(0) <= (others => '0'); -- NOP 1 (bolha de reset)
+	memoria_instrucoes(0) <= (others => '0'); -- NOP 1 (bolha de reset)
+	memoria_instrucoes(0) <= (others => '0'); -- NOP 1 (bolha de reset)
+
+	memoria_instrucoes(5) <= "01000010000000001010"; -- LDI banco_reg(2) <- 10
+        memoria_instrucoes(6) <= "01000011000000001010"; -- LDI banco_reg(3) <- 10
+	memoria_instrucoes(7) <= "01001010000000000101"; -- LDI banco_reg(10)<- 5
+	memoria_instrucoes(8) <= "01001011000000000010"; -- LDI banco_reg(11)<- 2
 		      
 		      -- TIPO R: | OPCODE(4) | RD(4) | RS(4) | RT(4) | don't care(4)| banco_reg(rd) <- rs + rt
-	memoria_instrucoes(4) <= "00010100001000110000"; -- ADD banco_reg(4) <-banco_reg(2) + banco_reg(3) |10 + 10| 
-        memoria_instrucoes(5) <= "00100101001010100000"; -- SUB banco_reg(5) <- banco_reg(2) - banco_reg(10) | 10 - 5|
-        memoria_instrucoes(6) <= "00110110101110100000"; -- MUL banco_reg(6) <- banco_reg(11) * banco_reg(10) | 2 * 5|     
+	memoria_instrucoes(9) <= "00010100001000110000"; -- ADD banco_reg(4) <-banco_reg(2) + banco_reg(3) |10 + 10| 
+        memoria_instrucoes(10) <= "00100101001010100000"; -- SUB banco_reg(5) <- banco_reg(2) - banco_reg(10) | 10 - 5|
+        memoria_instrucoes(11) <= "00110110101110100000"; -- MUL banco_reg(6) <- banco_reg(11) * banco_reg(10) | 2 * 5|     
 
 	               -- TIPO I: | OPCODE(4) | RT(4) | RS(4) | IMD(8)| banco_reg(rt) <- banco_reg(rs) + imd
-	memoria_instrucoes(7) <= "01010111101100000010"; -- ADDI banco_reg(7) <- banco_reg(11) + 2  | 2 + 2 |		
- 	memoria_instrucoes(8) <= "01101000001100001001"; -- SUBI banco_reg(8) <- banco_reg(3) - 9 | 10 - 9 |
-	memoria_instrucoes(9) <= "01111001101100000100"; -- MULI banco_reg(9) <- banco_reg(11) * 5 | 2 * 5| -- ANALISAR DEPOIS
+	memoria_instrucoes(12) <= "01010111101100000010"; -- ADDI banco_reg(7) <- banco_reg(11) + 2  | 2 + 2 |		
+ 	memoria_instrucoes(13) <= "01101000001100001001"; -- SUBI banco_reg(8) <- banco_reg(3) - 9 | 10 - 9 |
+	memoria_instrucoes(14) <= "01111001101100000100"; -- MULI banco_reg(9) <- banco_reg(11) * 5 | 2 * 5| -- ANALISAR DEPOIS
 			-- SW Mem[rs + imd] <- rt
 	--memoria_instrucoes(10) <= "10011000000000000100"; -- SW mem_dados(4) <- banco_reg(rt-8)|1| 
 	--memoria_instrucoes(12) <= "10010010000000001010";  -- SW mem_dados(10) <- banco_reg(rt-2)|10|

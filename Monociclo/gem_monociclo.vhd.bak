@@ -90,9 +90,9 @@ begin
     memoria_instrucoes_out <= memoria_instrucoes(conv_integer(PC));
 
     -- 2. DECODE
-    opcode <= memoria_instrucoes_out(19 downto 16); -- instrucao
+    opcode <= memoria_instrucoes_out(19 downto 16);
     reg_rd <= memoria_instrucoes_out(15 downto 12); -- Destino Tipo R
-    reg_rs <= memoria_instrucoes_out(11 downto 8);  -- Origem 
+    reg_rs <= memoria_instrucoes_out(11 downto 8);  -- Origem 1
     
     
     reg_rt <= memoria_instrucoes_out(7 downto 4) when (opcode="0001" or opcode="0010" or opcode="0011") 

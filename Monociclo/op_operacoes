@@ -1,12 +1,24 @@
-ADD -  0001
-SUB -  0010
-MUL -  0011
-LDI -  0100
-ADDI-  0101
-SUBI - 0110
-MULI - 0111
-LW   - 1000
-SW   - 1001
-JMP  - 1010
-BEQ  - 1011
-BNE  - 1100
+﻿	-- Formato I: LDI, ADDI, SUBI, MULI, LW, SW (20 bits: OPCODE(4) | RT(4)
+        0 => "01000010000000001010", -- LDI R2, 10
+        1 => "01000011000000001010", -- LDI R3, 10
+        2 => "01001010000000000101", -- LDI R10, 5
+        3 => "01001011000000000010", -- LDI R11, 2
+	-- Formato R: ADD, SUB, MUL (20 bits: OPCODE(4) | RD(4) | RS(4) | RT(4) | don't care
+        4 => "00010100001000110000", -- ADD R4, R2, R3 (10 + 10)
+        5 => "00100101001010100000", -- SUB R5, R2, R10 (10 -5 )
+        6 => "00110110101110100000", -- MUL R6, R11, R10 ( 2 * 5 )
+	-- Formato I: LDI, ADDI, SUBI, MULI, LW, SW (20 bits: OPCODE(4) | RT(4)
+        7 => "01010111101100000010", -- ADDI R7, R11, 2 ( 2 + 2)
+        8 => "01101000001100001001", -- SUBI R8, R3, 9  ( 10 - 9 ) 
+        9 => "01111001101100000100", -- MULI R9, R11, 5 ( 2 * 5 )
+        10 => "10011000000000000100", -- SW R4 no End 4 (usando offset 1+0) (guarda 1)
+        12 => "10010010000000001010", -- SW R10 no End 10 (guarda 10)
+        13 => "10001100000000000100", -- LW R12 do End 1 (1)
+        14 => "10001101000000001010", -- LW R13 do End 10 (10)
+	-- Formato J: JMP (20 bits: OPCODE(4) | ENDERECO(8) | 00000000)
+	15 => "10100011001000000000", -- JMP 50        
+	-- LOOP: R12 (contador 10) decrementando ate o 5
+	-- Formato B: BEQ, BNE (20 bits: OPCODE(4) | RS(4) | RT(4) | DESLOC(8)) 
+        50 => "10111101101000001010", -- BEQ R13 == R10  (10 == 5) se for igual pula para o end 60 
+        51 => "00101101110110000000", -- SUB R13, R13, R10, ( 10 - 1) 
+        52 => "10100011001000000000", -- JMP 50 (Volta pro loop)

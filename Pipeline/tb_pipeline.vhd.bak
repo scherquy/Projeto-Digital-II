@@ -16,9 +16,9 @@ end component;
 signal clock_sg  : std_logic := '0';
 signal reset_sg  : std_logic := '1';
 
-
-constant CLK_PERIOD : time := 10 ps;  
-constant RESET_TIME : time := 10 ps; 
+-- Defina tempos realistas (ns = nanosegundos)
+constant CLK_PERIOD : time := 100 ps;  -- Clock de 100 MHz
+constant RESET_TIME : time := 200 ps;  -- Reset por 2 ciclos de clock
 
 begin
 
@@ -28,7 +28,7 @@ inst_top: pipeline
         reset => reset_sg
     );
 
-
+-- Clock de 100 MHz (período 10 ns)
 clock_sg <= not clock_sg after CLK_PERIOD/2;
 
 -- Processo de controle
